@@ -3,7 +3,11 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-
+#ifdef BASE64_USE_OPENSSL
+#include <openssl/bio.h>
+#include <openssl/buffer.h>
+#include <openssl/evp.h>
+#endif  // BASE64_USE_OPENSSL
 static unsigned char *baseStr = (unsigned char *)"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                                  "abcdefghijklmnopqrstuvwxyz"
                                                  "0123456789+/";
@@ -67,7 +71,24 @@ char *base64_encode(const char *src, unsigned int srclen, char *dest) {
   if (!srclen) return 0;
   size_t desclen = (srclen + 2) / 3 << 2;
   if (!dest) dest = (char *)malloc(desclen + 1);
+#ifdef BASE64_USE_OPENSSL
+  BIO *bio, *b64;
+  BUF_MEM *bufferPtr;
+
+  b64 = BIO_new(BIO_f_base64());
+  bio = BIO_new(BIO_s_mem());
+  bio = BIO_push(b64, bio);
+
+  BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
+  BIO_write(bio, src, srclen);
+  BIO_flush(bio);
+  BIO_get_mem_ptr(bio, &bufferPtr);
+  BIO_set_close(bio, BIO_NOCLOSE);
+  BIO_free_all(bio);
+  memcpy(dest, bufferPtr->data, desclen);
+#else
   encode(src, srclen, dest);
+#endif  // BASE64_USE_OPENSSL
   dest[desclen] = 0;
   return dest;
 }
@@ -193,12 +214,23 @@ char *base64_decode(const char *src, unsigned int srclen, char *dest) {
 
   if (!dest) return 0;
 
+#ifdef BASE64_USE_OPENSSL
+  BIO *bio, *b64;
+  bio = BIO_new_mem_buf(src, -1);
+  b64 = BIO_new(BIO_f_base64());
+  bio = BIO_push(b64, bio);
+
+  BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
+  BIO_read(bio, dest, strlen);
+  BIO_free_all(bio);
+#else
   bool status =
       decode((const unsigned char *)src, srclen, (unsigned char *)dest);
   if (!status) {
     if (dest) free(dest);
     return 0;
   }
+#endif  // BASE64_USE_OPENSSL
 
   dest[destlen] = 0;
   return dest;
