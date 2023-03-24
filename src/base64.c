@@ -7,7 +7,9 @@
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
-#endif  // BASE64_USE_OPENSSL
+#endif // BASE64_USE_OPENSSL
+
+#ifndef BASE64_USE_OPENSSL
 static unsigned char *baseStr = (unsigned char *)"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                                  "abcdefghijklmnopqrstuvwxyz"
                                                  "0123456789+/";
@@ -29,8 +31,7 @@ static void encode3to4(const unsigned char *src, unsigned char *dest) {
 
 static void encode2to4(const unsigned char *src, unsigned char *dest) {
   dest[0] = baseStr[(unsigned int)((src[0] >> 2) & 0x3F)];
-  dest[1] =
-      baseStr[(unsigned int)(((src[0] & 3) << 4) | ((src[1] >> 4) & 0xF))];
+  dest[1] = baseStr[(unsigned int)(((src[0] & 3) << 4) | ((src[1] >> 4) & 0xF))];
   dest[2] = baseStr[(unsigned int)((src[1] & 0xF) << 2)];
   dest[3] = (unsigned char)'=';
 }
@@ -62,6 +63,7 @@ static void encode(const unsigned char *src, unsigned int srclen,
       break;
   }
 }
+#endif // BASE64_USE_OPENSSL
 
 char *base64_encode(const char *src, unsigned int srclen, char *dest) {
   if (!src) return 0;
@@ -93,6 +95,7 @@ char *base64_encode(const char *src, unsigned int srclen, char *dest) {
   return dest;
 }
 
+#ifndef BASE64_USE_OPENSSL
 static int code2value(unsigned char code) {
   if (43 == (int)code)  // +
     return 62;
@@ -201,6 +204,7 @@ static bool decode(const unsigned char *src, unsigned int srclen,
 
   return status;
 }
+#endif // BASE64_USE_OPENSSL
 
 char *base64_decode(const char *src, unsigned int srclen, char *dest) {
   if (!src) return 0;
@@ -221,7 +225,7 @@ char *base64_decode(const char *src, unsigned int srclen, char *dest) {
   bio = BIO_push(b64, bio);
 
   BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
-  BIO_read(bio, dest, strlen);
+  BIO_read(bio, dest, srclen);
   BIO_free_all(bio);
 #else
   bool status =
