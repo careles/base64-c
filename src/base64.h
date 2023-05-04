@@ -1,6 +1,10 @@
 #ifndef BASE64_H
 #define BASE64_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * 字符串 Base64 编码
  * @param src 源字符串
@@ -18,4 +22,9 @@ char *base64_encode(const char *src, unsigned int srclen, char *dest);
  * @return 解码后的字符串
  */
 char *base64_decode(const char *src, unsigned int srclen, char *dest);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif  // BASE64_H
