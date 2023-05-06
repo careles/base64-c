@@ -1,8 +1,10 @@
 #include "base64.h"
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #ifdef BASE64_USE_OPENSSL
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
