@@ -7,7 +7,7 @@
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
-#endif // BASE64_USE_OPENSSL
+#endif  // BASE64_USE_OPENSSL
 
 #ifndef BASE64_USE_OPENSSL
 static unsigned char *baseStr = (unsigned char *)"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -31,7 +31,8 @@ static void encode3to4(const unsigned char *src, unsigned char *dest) {
 
 static void encode2to4(const unsigned char *src, unsigned char *dest) {
   dest[0] = baseStr[(unsigned int)((src[0] >> 2) & 0x3F)];
-  dest[1] = baseStr[(unsigned int)(((src[0] & 3) << 4) | ((src[1] >> 4) & 0xF))];
+  dest[1] =
+      baseStr[(unsigned int)(((src[0] & 3) << 4) | ((src[1] >> 4) & 0xF))];
   dest[2] = baseStr[(unsigned int)((src[1] & 0xF) << 2)];
   dest[3] = (unsigned char)'=';
 }
@@ -63,16 +64,20 @@ static void encode(const unsigned char *src, unsigned int srclen,
       break;
   }
 }
-#endif // BASE64_USE_OPENSSL
+#endif  // BASE64_USE_OPENSSL
 
-char *base64_encode(const char *src, unsigned int srclen, char *dest) {
+size_t base64_encode(char *dest, const char *src, size_t srclen) {
   if (!src) return 0;
 
   if (!srclen) srclen = strlen(src);
 
   if (!srclen) return 0;
+  if (!dest) {
+    fprintf(stderr, "encode buffer cache not exist!\n");
+    return 0;
+  }
+
   size_t desclen = (srclen + 2) / 3 << 2;
-  if (!dest) dest = (char *)malloc(desclen + 1);
 #ifdef BASE64_USE_OPENSSL
   BIO *bio, *b64;
   BUF_MEM *bufferPtr;
@@ -92,7 +97,7 @@ char *base64_encode(const char *src, unsigned int srclen, char *dest) {
   encode(src, srclen, dest);
 #endif  // BASE64_USE_OPENSSL
   dest[desclen] = 0;
-  return dest;
+  return desclen;
 }
 
 #ifndef BASE64_USE_OPENSSL
@@ -204,19 +209,21 @@ static bool decode(const unsigned char *src, unsigned int srclen,
 
   return status;
 }
-#endif // BASE64_USE_OPENSSL
+#endif  // BASE64_USE_OPENSSL
 
-char *base64_decode(const char *src, unsigned int srclen, char *dest) {
+size_t base64_decode(char *dest, const char *src, size_t srclen) {
   if (!src) return 0;
 
   if (!srclen) srclen = strlen(src);
 
   if (!srclen) return 0;
 
-  unsigned int destlen = (srclen >> 2) * 3 + (((srclen % 4) * 3) >> 2);
-  if (!dest) dest = (char *)malloc(destlen + 1);
+  if (!dest) {
+    fprintf(stderr, "decode buffer cache not exist!\n");
+    return 0;
+  }
 
-  if (!dest) return 0;
+  size_t destlen = (srclen >> 2) * 3 + (((srclen % 4) * 3) >> 2);
 
 #ifdef BASE64_USE_OPENSSL
   BIO *bio, *b64;
@@ -237,5 +244,5 @@ char *base64_decode(const char *src, unsigned int srclen, char *dest) {
 #endif  // BASE64_USE_OPENSSL
 
   dest[destlen] = 0;
-  return dest;
+  return destlen;
 }

@@ -5,13 +5,16 @@
 #include "base64.h"
 
 int main() {
-  char *plainBuf = "This is a plain sting for base64 encode test.";
-  char *encBuf = base64_encode(plainBuf, strlen(plainBuf), 0);
-  char *decBuf = base64_decode(encBuf, strlen(encBuf), 0);
+  const char *plainBuf = "This is a plain sting for base64 encode test.";
   printf("Plain Buff: %s\n", plainBuf);
+  char encBuf[1024] = {0};
+  size_t enclen = base64_encode(encBuf, plainBuf, strlen(plainBuf));
+  if (!enclen) exit(1);
   printf("Encoded Buff: %s\n", encBuf);
+
+  char decBuf[1024] = {0};
+  size_t declen = base64_decode(decBuf, encBuf, strlen(encBuf));
+  if (!declen) exit(1);
   printf("Decoded Buff: %s\n", decBuf);
-  free(encBuf);
-  free(decBuf);
   return 0;
 }
