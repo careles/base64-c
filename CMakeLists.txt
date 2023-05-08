@@ -4,7 +4,7 @@ project(base64 VERSION 1.0.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_compile_options(-Wall -Wextra -pedantic)
+add_compile_options(-Wall -pedantic)
 
 if (BASE64_USE_OPENSSL) # 使用openssl进行编码/解码
     add_definitions(-DBASE64_USE_OPENSSL)
